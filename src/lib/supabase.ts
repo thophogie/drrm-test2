@@ -1,9 +1,15 @@
-import { createClient } from '@supabase/supabase-js'
-
-// Use your actual Supabase credentials
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://eqjtpxrlhmddzswthasj.supabase.co'
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxanRweHJsaG1kZHpzd3RoYXNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEyMDQzODcsImV4cCI6MjA2Njc4MDM4N30.-FLlI0Kc08Am4KLj9NUmjQwCKgjP6SJ1WwwO01WuBlc'
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+import
+ { createClient } 
+from
+ 
+'@supabase/supabase-js'
+;
+const
+ supabaseUrl = process.env.SUPABASE_URL;
+const
+ supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+const
+ supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Database types
 export interface Database {
