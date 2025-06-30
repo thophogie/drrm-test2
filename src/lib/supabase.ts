@@ -1,15 +1,11 @@
-import
- { createClient } 
-from
- 
-'@supabase/supabase-js'
-;
-const
- supabaseUrl = process.env.SUPABASE_URL;
-const
- supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
-const
- supabase = createClient(supabaseUrl, supabaseAnonKey);
+require('dotenv').config(); // Load environment variables
+
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Database types
 export interface Database {
