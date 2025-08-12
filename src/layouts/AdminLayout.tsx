@@ -16,7 +16,8 @@ import {
   Info,
   Images,
   Share2,
-  Siren
+  Siren,
+  FolderOpen
 } from 'lucide-react';
 
 const AdminLayout: React.FC = () => {
@@ -39,6 +40,7 @@ const AdminLayout: React.FC = () => {
     { path: '/admin/gallery', icon: Images, label: 'Gallery' },
     { path: '/admin/social', icon: Share2, label: 'Social Media' },
     { path: '/admin/pages', icon: FileText, label: 'Pages' },
+    { path: '/admin/resources', icon: FolderOpen, label: 'Resources' },
     { path: '/admin/incidents', icon: AlertTriangle, label: 'Incident Reports' },
     { path: '/admin/users', icon: Users, label: 'Users' },
     { path: '/admin/settings', icon: Settings, label: 'Settings' },

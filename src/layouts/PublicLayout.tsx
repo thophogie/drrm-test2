@@ -32,10 +32,15 @@ const PublicLayout: React.FC = () => {
             <nav className="hidden md:flex items-center space-x-6">
               <Link to="/" className="text-yellow-500 hover:text-yellow-400 transition-colors">Home</Link>
               <Link to="/about" className="text-yellow-500 hover:text-yellow-400 transition-colors">About</Link>
-              <Link to="/services" className="text-yellow-500 hover:text-yellow-400 transition-colors">Services</Link>
-              <Link to="/news" className="text-yellow-500 hover:text-yellow-400 transition-colors">News</Link>
+              <Link to="/services-detail" className="text-yellow-500 hover:text-yellow-400 transition-colors">Services</Link>
+              <Link to="/news-portal" className="text-yellow-500 hover:text-yellow-400 transition-colors">News</Link>
+              <Link to="/resources" className="text-yellow-500 hover:text-yellow-400 transition-colors">Resources</Link>
+              <Link to="/disaster-planning" className="text-yellow-500 hover:text-yellow-400 transition-colors">Planning</Link>
               <Link to="/gallery" className="text-yellow-500 hover:text-yellow-400 transition-colors">Gallery</Link>
               <Link to="/contact" className="text-yellow-500 hover:text-yellow-400 transition-colors">Contact</Link>
+              <Link to="/admin" className="bg-yellow-500 text-blue-950 px-3 py-1 rounded-lg hover:bg-yellow-400 transition-colors text-sm font-medium">
+                Admin
+              </Link>
             </nav>
           </div>
         </header>

@@ -1,50 +1,37 @@
 import React, { useState } from 'react';
-import { Plus, Edit, Trash2, Eye, Globe, FileText } from 'lucide-react';
-
-interface Page {
-  id: string;
-  title: string;
-  slug: string;
-  content: string;
-  metaDescription: string;
-  status: 'published' | 'draft';
-  createdAt: string;
-  updatedAt: string;
-}
+import { Plus, Edit, Trash2, Eye, Globe, FileText, Layout, Settings, X, Save } from 'lucide-react';
+import { usePages } from '../../contexts/PagesContext';
+import type { Page, PageSection } from '../../types';
 
 const PagesManagement: React.FC = () => {
-  const [pages, setPages] = useState<Page[]>([
-    {
-      id: '1',
-      title: 'About MDRRMO',
-      slug: 'about',
-      content: 'The Municipal Disaster Risk Reduction and Management Office (MDRRMO) of Pio Duran serves as the primary agency...',
-      metaDescription: 'Learn about the Municipal Disaster Risk Reduction and Management Office of Pio Duran, Albay.',
-      status: 'published',
-      createdAt: '2025-01-01',
-      updatedAt: '2025-01-22'
-    },
-    {
-      id: '2',
-      title: 'Emergency Procedures',
-      slug: 'emergency-procedures',
-      content: 'Comprehensive guide on what to do before, during, and after different types of emergencies...',
-      metaDescription: 'Emergency procedures and safety guidelines for various disaster scenarios.',
-      status: 'published',
-      createdAt: '2025-01-05',
-      updatedAt: '2025-01-20'
-    }
-  ]);
+  const { pages, addPage, updatePage, deletePage } = usePages();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSectionModalOpen, setIsSectionModalOpen] = useState(false);
   const [editingPage, setEditingPage] = useState<string | null>(null);
+  const [selectedPageForSections, setSelectedPageForSections] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     slug: '',
     content: '',
-    metaDescription: '',
-    status: 'draft' as 'published' | 'draft'
+    meta_description: '',
+    meta_keywords: '',
+    hero_title: '',
+    hero_subtitle: '',
+    hero_image: '',
+    status: 'draft' as 'published' | 'draft',
+    template: 'default' as 'default' | 'about' | 'services' | 'news' | 'resources' | 'disaster-plan',
+    featured: false
   });
+
+  const templates = [
+    { id: 'default', name: 'Default Page', description: 'Standard page layout' },
+    { id: 'about', name: 'About Page', description: 'About MDRRMO template' },
+    { id: 'services', name: 'Services Page', description: 'Services showcase template' },
+    { id: 'news', name: 'News Portal', description: 'News listing and detail template' },
+    { id: 'resources', name: 'Resources Page', description: 'Downloads and resources template' },
+    { id: 'disaster-plan', name: 'Disaster Planning', description: 'DRRM planning template' }
+  ];
 
   const generateSlug = (title: string) => {
     return title
@@ -55,29 +42,25 @@ const PagesManagement: React.FC = () => {
       .trim();
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const now = new Date().toISOString().split('T')[0];
-    
-    if (editingPage) {
-      setPages(prev => prev.map(page => 
-        page.id === editingPage 
-          ? { ...page, ...formData, updatedAt: now }
-          : page
-      ));
-    } else {
-      const newPage: Page = {
-        id: Date.now().toString(),
+    try {
+      const pageData = {
         ...formData,
-        slug: formData.slug || generateSlug(formData.title),
-        createdAt: now,
-        updatedAt: now
+        slug: formData.slug || generateSlug(formData.title)
       };
-      setPages(prev => [newPage, ...prev]);
-    }
 
-    resetForm();
+      if (editingPage) {
+        await updatePage(editingPage, pageData);
+      } else {
+        await addPage(pageData);
+      }
+      resetForm();
+    } catch (error) {
+      console.error('Error saving page:', error);
+      alert('Error saving page. Please try again.');
+    }
   };
 
   const resetForm = () => {
@@ -85,8 +68,14 @@ const PagesManagement: React.FC = () => {
       title: '',
       slug: '',
       content: '',
-      metaDescription: '',
-      status: 'draft'
+      meta_description: '',
+      meta_keywords: '',
+      hero_title: '',
+      hero_subtitle: '',
+      hero_image: '',
+      status: 'draft',
+      template: 'default',
+      featured: false
     });
     setEditingPage(null);
     setIsModalOpen(false);
@@ -97,16 +86,27 @@ const PagesManagement: React.FC = () => {
       title: page.title,
       slug: page.slug,
       content: page.content,
-      metaDescription: page.metaDescription,
-      status: page.status
+      meta_description: page.meta_description || '',
+      meta_keywords: page.meta_keywords || '',
+      hero_title: page.hero_title || '',
+      hero_subtitle: page.hero_subtitle || '',
+      hero_image: page.hero_image || '',
+      status: page.status,
+      template: page.template,
+      featured: page.featured || false
     });
     setEditingPage(page.id);
     setIsModalOpen(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this page?')) {
-      setPages(prev => prev.filter(page => page.id !== id));
+      try {
+        await deletePage(id);
+      } catch (error) {
+        console.error('Error deleting page:', error);
+        alert('Error deleting page. Please try again.');
+      }
     }
   };
 
@@ -145,10 +145,16 @@ const PagesManagement: React.FC = () => {
                   Page
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Template
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   URL
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Views
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Last Updated
@@ -164,7 +170,18 @@ const PagesManagement: React.FC = () => {
                   <td className="px-6 py-4">
                     <div>
                       <h3 className="font-medium text-gray-900">{page.title}</h3>
-                      <p className="text-sm text-gray-600 line-clamp-2">{page.metaDescription}</p>
+                      <p className="text-sm text-gray-600 line-clamp-2">{page.meta_description}</p>
+                      {page.featured && (
+                        <span className="inline-block mt-1 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">
+                          Featured
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center text-sm text-gray-600">
+                      <Layout size={14} className="mr-1" />
+                      {templates.find(t => t.id === page.template)?.name || 'Default'}
                     </div>
                   </td>
                   <td className="px-6 py-4">
@@ -183,7 +200,10 @@ const PagesManagement: React.FC = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-900">
-                    {new Date(page.updatedAt).toLocaleDateString()}
+                    {page.view_count || 0}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-900">
+                    {new Date(page.updated_at).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center space-x-2">
@@ -193,6 +213,13 @@ const PagesManagement: React.FC = () => {
                         title="View Page"
                       >
                         <Eye size={16} />
+                      </button>
+                      <button
+                        onClick={() => setSelectedPageForSections(page.id)}
+                        className="text-purple-600 hover:text-purple-800"
+                        title="Manage Sections"
+                      >
+                        <Layout size={16} />
                       </button>
                       <button
                         onClick={() => handleEdit(page)}
@@ -261,20 +288,91 @@ const PagesManagement: React.FC = () => {
                 </div>
               </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Hero Title
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.hero_title}
+                    onChange={(e) => setFormData({ ...formData, hero_title: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Optional hero section title"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Hero Subtitle
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.hero_subtitle}
+                    onChange={(e) => setFormData({ ...formData, hero_subtitle: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Optional hero section subtitle"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Template
+                </label>
+                <select
+                  value={formData.template}
+                  onChange={(e) => setFormData({ ...formData, template: e.target.value as any })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  {templates.map((template) => (
+                    <option key={template.id} value={template.id}>
+                      {template.name} - {template.description}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Hero Image URL
+                </label>
+                <input
+                  type="url"
+                  value={formData.hero_image}
+                  onChange={(e) => setFormData({ ...formData, hero_image: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Optional hero background image"
+                />
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Meta Description
                 </label>
                 <textarea
-                  value={formData.metaDescription}
-                  onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
+                  value={formData.meta_description}
+                  onChange={(e) => setFormData({ ...formData, meta_description: e.target.value })}
                   rows={2}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Brief description for search engines (150-160 characters)"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  {formData.metaDescription.length}/160 characters
+                  {formData.meta_description.length}/160 characters
                 </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Meta Keywords
+                </label>
+                <input
+                  type="text"
+                  value={formData.meta_keywords}
+                  onChange={(e) => setFormData({ ...formData, meta_keywords: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Comma-separated keywords for SEO"
+                />
               </div>
 
               <div>
@@ -291,18 +389,32 @@ const PagesManagement: React.FC = () => {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Status
-                </label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value as 'published' | 'draft' })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="draft">Draft</option>
-                  <option value="published">Published</option>
-                </select>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Status
+                  </label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value as 'published' | 'draft' })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="draft">Draft</option>
+                    <option value="published">Published</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center">
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={formData.featured}
+                      onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="ml-2 text-sm font-medium text-gray-700">Featured Page</span>
+                  </label>
+                </div>
               </div>
 
               <div className="flex justify-end space-x-3 pt-4 border-t">
@@ -317,11 +429,46 @@ const PagesManagement: React.FC = () => {
                   type="submit"
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
                 >
-                  <FileText size={16} />
+                  <Save size={16} />
                   <span>{editingPage ? 'Update Page' : 'Create Page'}</span>
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Sections Management Modal */}
+      {selectedPageForSections && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Manage Page Sections
+                </h2>
+                <button
+                  onClick={() => setSelectedPageForSections(null)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              <div className="text-center py-12">
+                <Layout className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Page Sections</h3>
+                <p className="text-gray-500">Section management will be available in the next update.</p>
+                <button
+                  onClick={() => setSelectedPageForSections(null)}
+                  className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

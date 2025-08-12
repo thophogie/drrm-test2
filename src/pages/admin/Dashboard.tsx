@@ -1,5 +1,6 @@
 import React from 'react';
 import { useData } from '../../contexts/DataContext';
+import { usePages } from '../../contexts/PagesContext';
 import { 
   Newspaper, 
   Shield, 
@@ -8,11 +9,14 @@ import {
   TrendingUp,
   Clock,
   CheckCircle,
-  XCircle
+  XCircle,
+  FileText,
+  Download
 } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
   const { news, services, incidents } = useData();
+  const { pages, resources } = usePages();
 
   const stats = [
     {
@@ -23,18 +27,18 @@ const Dashboard: React.FC = () => {
       change: '+12%'
     },
     {
-      title: 'Active Services',
-      value: services.filter(s => s.status === 'active').length,
-      icon: Shield,
-      color: 'bg-green-500',
-      change: '+5%'
+      title: 'Published Pages',
+      value: pages.filter(p => p.status === 'published').length,
+      icon: FileText,
+      color: 'bg-purple-500',
+      change: '+8%'
     },
     {
-      title: 'Incident Reports',
-      value: incidents.length,
-      icon: AlertTriangle,
-      color: 'bg-red-500',
-      change: '+8%'
+      title: 'Total Resources',
+      value: resources.length,
+      icon: Download,
+      color: 'bg-green-500',
+      change: '+15%'
     },
     {
       title: 'Pending Reports',
@@ -116,52 +120,87 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Recent News */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Recent News</h2>
-          </div>
-          <div className="p-6">
-            {recentNews.length > 0 ? (
-              <div className="space-y-4">
-                {recentNews.map((article) => (
-                  <div key={article.id} className="flex items-start space-x-4">
-                    <img
-                      src={article.image}
-                      alt={article.title}
-                      className="w-16 h-16 rounded-lg object-cover"
-                    />
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900 line-clamp-2">{article.title}</h3>
-                      <p className="text-sm text-gray-600 mt-1">{article.date}</p>
-                      <span className={`inline-block px-2 py-1 text-xs rounded-full mt-2 ${
-                        article.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {article.status}
-                      </span>
+          {/* Popular Pages */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">Popular Pages</h2>
+            </div>
+            <div className="p-6">
+              {pages.length > 0 ? (
+                <div className="space-y-4">
+                  {pages
+                    .filter(page => page.status === 'published')
+                    .sort((a, b) => (b.view_count || 0) - (a.view_count || 0))
+                    .slice(0, 5)
+                    .map((page) => (
+                    <div key={page.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <div className="flex-1">
+                        <h3 className="font-medium text-gray-900">{page.title}</h3>
+                        <p className="text-sm text-gray-600">/{page.slug}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium text-gray-900">{page.view_count || 0} views</p>
+                        <p className="text-xs text-gray-500">{page.template}</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-500 text-center py-8">No news articles yet</p>
-            )}
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 text-center py-8">No pages created yet</p>
+              )}
+            </div>
+          </div>
+          {/* Top Downloads */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">Top Downloads</h2>
+            </div>
+            <div className="p-6">
+              {resources.length > 0 ? (
+                <div className="space-y-4">
+                  {resources
+                    .filter(resource => resource.status === 'published')
+                    .sort((a, b) => b.download_count - a.download_count)
+                    .slice(0, 5)
+                    .map((resource) => (
+                    <div key={resource.id} className="flex items-start space-x-4">
+                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <FileText className="text-blue-600" size={20} />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-medium text-gray-900 line-clamp-2">{resource.title}</h3>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                            {resource.category}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {resource.download_count} downloads
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 text-center py-8">No resources yet</p>
+              )}
+            </div>
           </div>
         </div>
-      </div>
 
       {/* Quick Actions */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <button className="p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-left">
-            <Newspaper className="h-8 w-8 text-blue-500 mb-2" />
-            <h3 className="font-medium text-gray-900">Add News Article</h3>
-            <p className="text-sm text-gray-600">Create a new news post</p>
+            <FileText className="h-8 w-8 text-purple-500 mb-2" />
+            <h3 className="font-medium text-gray-900">Create New Page</h3>
+            <p className="text-sm text-gray-600">Add a new dynamic page</p>
           </button>
           <button className="p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-left">
-            <Shield className="h-8 w-8 text-green-500 mb-2" />
-            <h3 className="font-medium text-gray-900">Manage Services</h3>
-            <p className="text-sm text-gray-600">Update service offerings</p>
+            <Download className="h-8 w-8 text-green-500 mb-2" />
+            <h3 className="font-medium text-gray-900">Add Resource</h3>
+            <p className="text-sm text-gray-600">Upload new document</p>
           </button>
           <button className="p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-left">
             <AlertTriangle className="h-8 w-8 text-red-500 mb-2" />
