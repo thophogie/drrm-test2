@@ -35,9 +35,17 @@ const ServicesManagement: React.FC = () => {
     e.preventDefault();
     
     if (editingService) {
-      updateService(editingService, formData);
+      updateService(editingService, formData).then(() => {
+        alert('Service updated successfully!');
+      }).catch(() => {
+        alert('Error updating service. Please try again.');
+      });
     } else {
-      addService(formData);
+      addService(formData).then(() => {
+        alert('Service created successfully!');
+      }).catch(() => {
+        alert('Error creating service. Please try again.');
+      });
     }
 
     resetForm();

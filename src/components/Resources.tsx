@@ -1,7 +1,14 @@
 import React from 'react';
 import { FileText, BarChart3, ClipboardList, Search, MoreHorizontal } from 'lucide-react';
+import { usePages } from '../contexts/PagesContext';
+import { Link } from 'react-router-dom';
+import ResourceDownloadCard from './ResourceDownloadCard';
 
 const Resources: React.FC = () => {
+  const { resources } = usePages();
+  const publishedResources = resources.filter(resource => resource.status === 'published');
+  const featuredResources = publishedResources.filter(resource => resource.featured).slice(0, 3);
+
   const resourceTypes = [
     {
       icon: FileText,
@@ -79,60 +86,71 @@ const Resources: React.FC = () => {
                     ))}
                   </ol>
                 </div>
+                
+                <div className="mt-8">
+                  <Link
+                    to="/resources"
+                    className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+                  >
+                    <FileText className="mr-2" size={16} />
+                    Browse All Resources
+                  </Link>
+                </div>
               </div>
             </div>
             
             {/* Right Side - Google Drive Embed */}
             <div className="md:w-2/3">
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-white font-medium">Public Resources</h3>
-                      <p className="text-blue-100 text-sm">Download & View Only</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <button className="p-2 rounded-full hover:bg-blue-700 transition">
-                        <Search className="h-5 w-5 text-white" />
-                      </button>
-                      <button className="p-2 rounded-full hover:bg-blue-700 transition">
-                        <MoreHorizontal className="h-5 w-5 text-white" />
-                      </button>
-                    </div>
+              {featuredResources.length > 0 ? (
+                <div className="space-y-6">
+                  <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-4 rounded-t-lg">
+                    <h3 className="text-white font-medium">Featured Resources</h3>
+                    <p className="text-blue-100 text-sm">Most popular downloads</p>
+                  </div>
+                  
+                  <div className="space-y-4 p-4">
+                    {featuredResources.map((resource) => (
+                      <ResourceDownloadCard 
+                        key={resource.id} 
+                        resource={resource} 
+                        variant="compact"
+                        showStats={true}
+                      />
+                    ))}
+                  </div>
+                  
+                  <div className="p-4 bg-gray-50 text-center border-t">
+                    <Link
+                      to="/resources"
+                      className="text-blue-600 hover:text-blue-800 font-medium"
+                    >
+                      View All {publishedResources.length} Resources →
+                    </Link>
                   </div>
                 </div>
-                
-                {/* Google Drive Folder Embed */}
-                <div className="relative h-[500px]">
-                  {/* Loading State */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="flex flex-col items-center">
-                      <div className="h-12 w-12 border-4 border-blue-200 rounded-full animate-spin border-t-blue-600 mb-4"></div>
-                      <p className="text-gray-500">Loading folder contents...</p>
+              ) : (
+                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-white font-medium">Public Resources</h3>
+                        <p className="text-blue-100 text-sm">Download & View Only</p>
+                      </div>
                     </div>
                   </div>
                   
-                  {/* Placeholder for Google Drive embed */}
-                  <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                    <div className="text-center">
-                      <FileText className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-                      <p className="text-gray-600">Google Drive Integration</p>
-                      <p className="text-sm text-gray-500">Resources folder would be embedded here</p>
-                    </div>
+                  <div className="p-8 text-center">
+                    <FileText className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+                    <p className="text-gray-600 mb-4">No resources available yet</p>
+                    <Link
+                      to="/admin/resources"
+                      className="text-blue-600 hover:text-blue-800 font-medium"
+                    >
+                      Add Resources in Admin Panel
+                    </Link>
                   </div>
                 </div>
-
-                <div className="p-4 bg-gray-50 flex justify-between items-center">
-                  <p className="text-xs text-gray-500">All resources are property of MDRRMO</p>
-                  <div className="flex gap-2">
-                    <button className="text-xs bg-blue-50 text-blue-600 px-3 py-1 rounded hover:bg-blue-100 transition">
-                      Request Access
-                    </button>
-                    <button className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition">
-                      Report Issue
-                    </button>
-                  </div>
-                </div>
+              )}
               </div>
             </div>
           </div>

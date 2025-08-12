@@ -214,12 +214,19 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       const { data, error } = await supabase
         .from('incident_reports')
-        .insert([{ ...incident, reference_number: referenceNumber }])
+        .insert([{ 
+          ...incident, 
+          reference_number: referenceNumber,
+          reporter_name: incident.reporterName,
+          contact_number: incident.contactNumber,
+          incident_type: incident.incidentType
+        }])
         .select()
         .single();
 
       if (error) throw error;
       setIncidents(prev => [data, ...prev]);
+      return referenceNumber;
     } catch (err) {
       console.error('Error adding incident:', err);
       throw err;

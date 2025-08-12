@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Search, Filter, Tag, Eye, Share2 } from 'lucide-react';
+import { Calendar, Search, Filter, Tag, Eye, Share2, ArrowRight, Clock, User } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 import SocialShareButtons from '../../components/SocialShareButtons';
 
@@ -15,8 +15,8 @@ const NewsPage: React.FC = () => {
   const filteredNews = publishedNews.filter(article => {
     const matchesSearch = 
       article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      article.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      article.content.toLowerCase().includes(searchTerm.toLowerCase());
+      (article.excerpt || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (article.content || '').toLowerCase().includes(searchTerm.toLowerCase());
     
     return matchesSearch;
   });
@@ -67,11 +67,79 @@ const NewsPage: React.FC = () => {
     return 'Report and Incident';
   };
 
+  // If no news available, show placeholder
+  if (publishedNews.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-20">
+        <div className="container mx-auto px-6">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-blue-900 mb-8">News Portal</h1>
+            <div className="bg-white rounded-xl shadow-lg p-12">
+              <Eye className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">No News Available</h2>
+              <p className="text-gray-600 mb-6">News articles will appear here once published by the admin.</p>
+              <Link 
+                to="/admin/news"
+                className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <User className="mr-2" size={16} />
+                Go to Admin Panel
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pt-20">
+      {/* Header */}
+      <section className="bg-blue-950 text-white py-16">
+        <div className="container mx-auto px-6">
+          <div className="text-center">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">News Portal</h1>
+            <div className="w-24 h-1 bg-yellow-500 mx-auto mb-6"></div>
+            <p className="text-xl text-blue-200 max-w-3xl mx-auto">
+              Stay informed with the latest news, announcements, and emergency updates from MDRRMO Pio Duran
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Search and Filter */}
+      <section className="py-8 bg-white border-b">
+        <div className="container mx-auto px-6">
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <input
+                type="text"
+                placeholder="Search news articles..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-600">
+                {filteredNews.length} article{filteredNews.length !== 1 ? 's' : ''} found
+              </span>
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="lg:hidden bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+              >
+                <Filter size={16} className="mr-2" />
+                Articles
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <div className="flex">
         {/* Sidebar */}
-        <div className={`w-80 bg-blue-950 shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 fixed lg:static z-10 h-screen ${
+        <div className={`w-80 bg-blue-950 shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 fixed lg:static z-10 min-h-screen ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}>
           <div className="p-6 border-b border-blue-900">
@@ -86,7 +154,7 @@ const NewsPage: React.FC = () => {
             </div>
           </div>
           
-          <div className="overflow-y-auto h-[calc(100vh-7rem)]">
+          <div className="overflow-y-auto">
             {recentNews.map((article, index) => (
               <div
                 key={article.id}
@@ -114,7 +182,7 @@ const NewsPage: React.FC = () => {
                     <h3 className="font-semibold text-white text-sm line-clamp-2 mb-1">
                       {article.title}
                     </h3>
-                    <p className="text-blue-200 text-xs">{formatTimeAgo(article.date)}</p>
+                    <p className="text-blue-200 text-xs">{formatTimeAgo(article.date || article.created_at)}</p>
                   </div>
                 </div>
               </div>
@@ -124,34 +192,32 @@ const NewsPage: React.FC = () => {
 
         {/* Main Content */}
         <div className="flex-1">
-          {/* Mobile Toggle Button */}
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="fixed top-4 left-4 z-20 bg-blue-950 text-white p-3 rounded-full shadow-lg hover:bg-blue-900 lg:hidden"
-          >
-            <Filter size={20} />
-          </button>
-          
           {/* News Detail */}
           <div className="p-6 max-w-6xl mx-auto">
             {selectedNews ? (
               <article className="bg-white rounded-xl shadow-md overflow-hidden">
-                <img 
-                  src={selectedNews.image} 
-                  alt={selectedNews.title} 
-                  className="w-full h-80 object-cover"
-                />
+                {selectedNews.image && (
+                  <img 
+                    src={selectedNews.image} 
+                    alt={selectedNews.title} 
+                    className="w-full h-80 object-cover"
+                  />
+                )}
                 <div className="p-8">
                   <div className="flex items-center justify-between mb-4">
                     <span className={`px-3 py-1 ${getNewsTypeColor(selectedNews.title)} text-white rounded-full text-sm font-medium`}>
                       {getNewsTypeLabel(selectedNews.title)}
                     </span>
-                    <span className="text-gray-500 text-sm">{formatTimeAgo(selectedNews.date)}</span>
+                    <div className="flex items-center text-gray-500 text-sm">
+                      <Clock size={14} className="mr-1" />
+                      {formatTimeAgo(selectedNews.date || selectedNews.created_at)}
+                    </div>
                   </div>
                   
                   <h1 className="text-3xl font-bold text-gray-900 mb-4">{selectedNews.title}</h1>
                   
-                  <div className="flex items-center mb-6">
+                  {selectedNews.author && (
+                    <div className="flex items-center mb-6">
                     <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
                       <Users className="text-blue-600" size={20} />
                     </div>
@@ -159,20 +225,24 @@ const NewsPage: React.FC = () => {
                       <p className="font-medium text-gray-900">{selectedNews.author}</p>
                       <p className="text-gray-500 text-sm">MDRRMO Operations Center</p>
                     </div>
-                  </div>
+                    </div>
+                  )}
 
                   {/* Article Content */}
                   <div className="prose max-w-none text-gray-700 mb-8">
-                    <p className="mb-4">{selectedNews.excerpt}</p>
-                    <div className="whitespace-pre-line">{selectedNews.content}</div>
+                    {selectedNews.excerpt && <p className="mb-4 text-lg text-gray-600">{selectedNews.excerpt}</p>}
+                    <div className="whitespace-pre-line text-gray-700 leading-relaxed">
+                      {selectedNews.content || 'Content not available.'}
+                    </div>
                   </div>
 
                   {/* Social Share */}
                   <div className="border-t border-gray-200 pt-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Share this article</h3>
                     <SocialShareButtons
                       url={`${window.location.origin}/news/${selectedNews.id}`}
                       title={selectedNews.title}
-                      description={selectedNews.excerpt}
+                      description={selectedNews.excerpt || selectedNews.title}
                       image={selectedNews.image}
                       hashtags={['MDRRMO', 'PioDuran', 'News']}
                     />
@@ -180,11 +250,12 @@ const NewsPage: React.FC = () => {
 
                   {/* Tags */}
                   <div className="mt-6">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Related Topics</h4>
                     <div className="flex flex-wrap gap-2">
-                      <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">#FloodAlert</span>
-                      <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">#DisasterPreparedness</span>
-                      <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm">#EmergencyResponse</span>
-                      <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">#PublicSafety</span>
+                      <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm hover:bg-yellow-200 transition-colors cursor-pointer">#DisasterPreparedness</span>
+                      <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm hover:bg-blue-200 transition-colors cursor-pointer">#EmergencyResponse</span>
+                      <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm hover:bg-green-200 transition-colors cursor-pointer">#PublicSafety</span>
+                      <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm hover:bg-red-200 transition-colors cursor-pointer">#CommunityAlert</span>
                     </div>
                   </div>
                 </div>
@@ -193,7 +264,14 @@ const NewsPage: React.FC = () => {
               <div className="bg-white rounded-xl shadow-md p-12 text-center">
                 <Eye className="mx-auto h-16 w-16 text-gray-400 mb-4" />
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">Select a News Article</h2>
-                <p className="text-gray-600">Choose an article from the sidebar to read the full content</p>
+                <p className="text-gray-600 mb-6">Choose an article from the sidebar to read the full content</p>
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  className="lg:hidden bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center mx-auto"
+                >
+                  <Filter size={16} className="mr-2" />
+                  Browse Articles
+                </button>
               </div>
             )}
             
@@ -208,11 +286,13 @@ const NewsPage: React.FC = () => {
                     .map((article) => (
                     <div key={article.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
                          onClick={() => setSelectedNews(article)}>
-                      <img
-                        src={article.image}
-                        alt={article.title}
-                        className="w-full h-40 object-cover"
-                      />
+                      {article.image && (
+                        <img
+                          src={article.image}
+                          alt={article.title}
+                          className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      )}
                       <div className="p-5">
                         <div className="flex items-center mb-2">
                           <span className={`text-xs font-medium ${getNewsTypeColor(article.title)} text-white px-2 py-1 rounded`}>
@@ -220,12 +300,24 @@ const NewsPage: React.FC = () => {
                           </span>
                         </div>
                         <h3 className="font-bold text-gray-900 mt-2 mb-2 line-clamp-2">{article.title}</h3>
-                        <p className="text-gray-600 text-sm mb-3 line-clamp-2">{article.excerpt}</p>
-                        <span className="text-xs text-gray-500">{formatTimeAgo(article.date)}</span>
+                        <p className="text-gray-600 text-sm mb-3 line-clamp-2">{article.excerpt || 'No excerpt available'}</p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-500 flex items-center">
+                            <Clock size={12} className="mr-1" />
+                            {formatTimeAgo(article.date || article.created_at)}
+                          </span>
+                          <ArrowRight size={14} className="text-blue-600 group-hover:translate-x-1 transition-transform" />
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
+                
+                {filteredNews.filter(article => article.id !== selectedNews.id).length === 0 && (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">No other articles available at this time.</p>
+                  </div>
+                )}
               </div>
             )}
           </div>

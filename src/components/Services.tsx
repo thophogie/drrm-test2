@@ -1,7 +1,12 @@
 import React from 'react';
 import { Shield, Heart, Truck, Home } from 'lucide-react';
+import { useData } from '../contexts/DataContext';
+import { Link } from 'react-router-dom';
 
 const Services: React.FC = () => {
+  const { services } = useData();
+  const activeServices = services.filter(service => service.status === 'active');
+
   const services = [
     {
       icon: Shield,
@@ -54,6 +59,45 @@ const Services: React.FC = () => {
           </p>
         </div>
 
+        {/* Dynamic Services from Admin */}
+        {activeServices.length > 0 && (
+          <div className="mb-12">
+            <h3 className="text-2xl font-bold text-center text-blue-900 mb-8">Current Services</h3>
+            <div className="grid md:grid-cols-2 gap-8 mb-8">
+              {activeServices.slice(0, 4).map((service) => (
+                <div
+                  key={service.id}
+                  className="flex bg-white p-8 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border-l-4 border-blue-600"
+                >
+                  <div className="mr-5 self-start">
+                    <div className="bg-blue-100 p-4 rounded-full">
+                      <Shield className="text-blue-600" size={24} />
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold mb-3 text-blue-900">
+                      {service.title}
+                    </h3>
+                    <p className="text-gray-700 mb-4">
+                      {service.description}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {service.tags.map((tag, tagIndex) => (
+                        <span
+                          key={tagIndex}
+                          className="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="grid md:grid-cols-2 gap-8">
           {services.map((service, index) => (
             <div
@@ -88,9 +132,20 @@ const Services: React.FC = () => {
         </div>
 
         <div className="mt-12 text-center">
-          <button className="inline-flex items-center px-6 py-3 bg-yellow-500 text-gray-900 rounded-lg hover:bg-yellow-600 transition duration-300 font-medium">
+          <Link 
+            to="/services-detail"
+            className="inline-flex items-center px-6 py-3 bg-yellow-500 text-gray-900 rounded-lg hover:bg-yellow-600 transition duration-300 font-medium"
+          >
+            <Shield className="mr-2" size={20} />
+            View All Services
+          </Link>
+          <Link 
+            to="/resources"
+            className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300 font-medium ml-4"
+          >
+            <FolderOpen className="mr-2" size={20} />
             Download Complete Services Brochure (PDF)
-          </button>
+          </Link>
         </div>
       </div>
     </section>

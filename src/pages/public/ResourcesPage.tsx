@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { FileText, Download, Search, BarChart3, ClipboardList, MapPin, Shield, Users, Award } from 'lucide-react';
+import { FileText, Download, Search, BarChart3, ClipboardList, MapPin, Shield, Users, Award, FolderOpen } from 'lucide-react';
 import { usePages } from '../../contexts/PagesContext';
 import ResourceDownloadCard from '../../components/ResourceDownloadCard';
+import { Link } from 'react-router-dom';
 
 const ResourcesPage: React.FC = () => {
   const { resources } = usePages();
@@ -70,23 +71,57 @@ const ResourcesPage: React.FC = () => {
     { value: '24/7', label: 'Access Availability', description: 'Resources available anytime' }
   ];
 
-  return (
-    <div className="min-h-screen bg-gray-50 py-20">
-      <div className="container mx-auto px-6">
-        {/* Header */}
-        <section className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold text-blue-950 mb-6">
-            MDRRMO Resources & Downloads
-          </h1>
-          <div className="w-24 h-1 bg-yellow-500 mx-auto mb-8"></div>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Essential documents, forms, and maps to help residents of Pio Duran prepare for and respond to various hazards. 
-            All documents are available in PDF format for easy access and download.
-          </p>
-        </section>
+  // If no resources available, show admin link
+  if (publishedResources.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-20">
+        <div className="container mx-auto px-6">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-blue-900 mb-8">Resources & Downloads</h1>
+            <div className="bg-white rounded-xl shadow-lg p-12">
+              <FolderOpen className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">No Resources Available</h2>
+              <p className="text-gray-600 mb-6">Resources will appear here once uploaded by the admin.</p>
+              <Link 
+                to="/admin/resources"
+                className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Users className="mr-2" size={16} />
+                Go to Admin Panel
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-        {/* Resource Categories */}
-        <section className="mb-16">
+  return (
+    <div className="min-h-screen bg-gray-50 pt-20">
+      {/* Header */}
+      <section className="bg-blue-950 text-white py-16">
+        <div className="container mx-auto px-6">
+          <div className="text-center">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">Resources & Downloads</h1>
+            <div className="w-24 h-1 bg-yellow-500 mx-auto mb-6"></div>
+            <p className="text-xl text-blue-200 max-w-3xl mx-auto">
+              Essential documents, forms, and maps to help residents prepare for and respond to various hazards
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <div className="container mx-auto px-6">
+        <div className="py-16">
+          {/* Notice */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-12">
+            <p className="text-sm text-blue-800 text-center">
+              <strong>Note:</strong> All information materials here are for public consumption. 
+              Request for high-resolution copies for printing and/or reproduction can be requested through the Public Information Unit.
+            </p>
+          </div>
+
+          {/* Resource Categories */}
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-800 mb-4">Resource Categories</h2>
             <div className="w-24 h-1 bg-red-500 mx-auto mb-6"></div>
@@ -97,20 +132,23 @@ const ResourcesPage: React.FC = () => {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {resourceCategories.map((category) => (
-              <div key={category.id} className="bg-white rounded-lg p-6 shadow-lg text-center hover:shadow-xl transition-shadow group cursor-pointer">
+              <button 
+                key={category.id} 
+                onClick={() => setSelectedCategory(category.id === 'guides' ? 'guide' : category.id)}
+                className="bg-white rounded-lg p-6 shadow-lg text-center hover:shadow-xl transition-shadow group cursor-pointer w-full"
+              >
                 <div className={`w-16 h-16 ${category.bgColor} rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform`}>
                   <category.icon className={`${category.color} text-2xl`} size={32} />
                 </div>
                 <h3 className="text-lg font-bold text-gray-800 mb-2">{category.name}</h3>
                 <p className="text-gray-600 text-sm mb-4">{category.description}</p>
                 <span className={`${category.color} text-sm font-medium`}>{category.count} Documents</span>
-              </div>
+              </button>
             ))}
           </div>
-        </section>
+        </div>
 
         {/* Search and Filter */}
-        <section className="mb-16">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1 relative">
@@ -135,13 +173,15 @@ const ResourcesPage: React.FC = () => {
                   </option>
                 ))}
               </select>
+              
+              <div className="text-sm text-gray-600 flex items-center">
+                {filteredResources.length} resource{filteredResources.length !== 1 ? 's' : ''} found
+              </div>
             </div>
           </div>
-        </section>
 
-        {/* Featured Resources */}
-        {featuredResources.length > 0 && (
-          <section className="mb-16">
+          {/* Featured Resources */}
+          {featuredResources.length > 0 && (
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-gray-800 mb-4">Featured Resources</h2>
               <div className="w-24 h-1 bg-yellow-500 mx-auto mb-6"></div>
@@ -155,11 +195,9 @@ const ResourcesPage: React.FC = () => {
                 <ResourceDownloadCard key={resource.id} resource={resource} />
               ))}
             </div>
-          </section>
-        )}
+          )}
 
-        {/* Safety and Preparedness Guides */}
-        <section className="mb-16">
+          {/* All Resources */}
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-800 mb-4">All Resources ({filteredResources.length})</h2>
             <div className="w-24 h-1 bg-red-500 mx-auto mb-6"></div>
@@ -182,12 +220,19 @@ const ResourcesPage: React.FC = () => {
               <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No resources found</h3>
               <p className="text-gray-500">Try adjusting your search or filter criteria</p>
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  setSelectedCategory('all');
+                }}
+                className="text-blue-600 hover:text-blue-800 font-medium"
+              >
+                Clear filters
+              </button>
             </div>
           )}
-        </section>
 
-        {/* Resource Statistics */}
-        <section className="mb-16">
+          {/* Resource Statistics */}
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-800 mb-4">Resource Statistics</h2>
             <div className="w-24 h-1 bg-red-500 mx-auto mb-6"></div>
@@ -207,7 +252,7 @@ const ResourcesPage: React.FC = () => {
               </div>
             ))}
           </div>
-        </section>
+        </div>
       </div>
     </div>
   );

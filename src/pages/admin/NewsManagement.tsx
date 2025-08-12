@@ -35,13 +35,22 @@ const NewsManagement: React.FC = () => {
     
     const newsData = {
       ...formData,
-      date: new Date().toISOString().split('T')[0]
+      date: new Date().toISOString().split('T')[0],
+      excerpt: formData.excerpt || formData.content.substring(0, 200) + '...'
     };
 
     if (editingNews) {
-      updateNews(editingNews, newsData);
+      updateNews(editingNews, newsData).then(() => {
+        alert('News article updated successfully!');
+      }).catch(() => {
+        alert('Error updating news article. Please try again.');
+      });
     } else {
-      addNews(newsData);
+      addNews(newsData).then(() => {
+        alert('News article created successfully!');
+      }).catch(() => {
+        alert('Error creating news article. Please try again.');
+      });
     }
 
     resetForm();

@@ -114,8 +114,10 @@ const GalleryManagement: React.FC = () => {
     if (item) {
       try {
         await updateGalleryItem(id, { featured: !item.featured });
+        alert(`Gallery item ${!item.featured ? 'featured' : 'unfeatured'} successfully!`);
       } catch (error) {
         console.error('Error updating featured status:', error);
+        alert('Error updating featured status. Please try again.');
       }
     }
   };

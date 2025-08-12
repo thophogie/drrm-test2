@@ -24,15 +24,16 @@ const Home: React.FC = () => {
 
   const handleIncidentSubmit = (formData: any) => {
     // Add incident to data context
-    addIncident(formData);
-    
-    // Generate reference number
-    const refNum = `RD-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9999) + 1).padStart(4, '0')}`;
-    setReferenceNumber(refNum);
-    
-    // Close incident modal and show success modal
-    setIsIncidentModalOpen(false);
-    setIsSuccessModalOpen(true);
+    addIncident(formData)
+      .then((refNum) => {
+        setReferenceNumber(refNum || `RD-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9999) + 1).padStart(4, '0')}`);
+        setIsIncidentModalOpen(false);
+        setIsSuccessModalOpen(true);
+      })
+      .catch((error) => {
+        console.error('Error submitting incident:', error);
+        alert('Error submitting incident report. Please try again.');
+      });
   };
 
   return (

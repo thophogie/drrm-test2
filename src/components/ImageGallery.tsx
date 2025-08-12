@@ -1,17 +1,28 @@
 import React, { useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useData } from '../contexts/DataContext';
+import { Link } from 'react-router-dom';
 
 const ImageGallery: React.FC = () => {
   const galleryRef = useRef<HTMLDivElement>(null);
+  const { gallery } = useData();
+  const publishedGallery = gallery.filter(item => item.status === 'published');
 
-  const images = [
-    'https://res.cloudinary.com/dedcmctqk/image/upload/v1750575265/487673077_1062718335885316_7552782387266701410_n_gexfn2.jpg',
-    'https://res.cloudinary.com/dedcmctqk/image/upload/v1750575261/489043126_1065374988952984_1331524645056736117_n_fbmvch.jpg',
-    'https://res.cloudinary.com/dedcmctqk/image/upload/v1750575263/472984055_1002760098547807_5747993743270536498_n_cgi07u.jpg',
-    'https://images.pexels.com/photos/73833/worm-s-eye-view-us-flag-low-angle-shot-flag-73833.jpeg',
-    'https://images.pexels.com/photos/6146970/pexels-photo-6146970.jpeg',
-    'https://images.pexels.com/photos/8566473/pexels-photo-8566473.jpeg'
-  ];
+  // Use gallery images if available, otherwise fallback to default images
+  const images = publishedGallery.length > 0 
+    ? publishedGallery.map(item => ({ 
+        url: item.image || 'https://images.pexels.com/photos/6146970/pexels-photo-6146970.jpeg',
+        title: item.title,
+        description: item.description
+      }))
+    : [
+        { url: 'https://res.cloudinary.com/dedcmctqk/image/upload/v1750575265/487673077_1062718335885316_7552782387266701410_n_gexfn2.jpg', title: 'BDRRM Training Workshop', description: 'Barangay officials training' },
+        { url: 'https://res.cloudinary.com/dedcmctqk/image/upload/v1750575261/489043126_1065374988952984_1331524645056736117_n_fbmvch.jpg', title: 'Earthquake Drill', description: 'Community preparedness exercise' },
+        { url: 'https://res.cloudinary.com/dedcmctqk/image/upload/v1750575263/472984055_1002760098547807_5747993743270536498_n_cgi07u.jpg', title: 'Water Rescue Training', description: 'WASAR training session' },
+        { url: 'https://images.pexels.com/photos/73833/worm-s-eye-view-us-flag-low-angle-shot-flag-73833.jpeg', title: 'Fire Safety Campaign', description: 'Community fire prevention' },
+        { url: 'https://images.pexels.com/photos/6146970/pexels-photo-6146970.jpeg', title: 'Emergency Response', description: 'Community training' },
+        { url: 'https://images.pexels.com/photos/8566473/pexels-photo-8566473.jpeg', title: 'Flood Response', description: 'Emergency simulation' }
+      ];
 
   useEffect(() => {
     const gallery = galleryRef.current;
@@ -94,17 +105,33 @@ const ImageGallery: React.FC = () => {
               {images.map((image, index) => (
                 <div
                   key={index}
-                  className="flex-shrink-0 w-64 h-64 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+                  className="flex-shrink-0 w-64 h-64 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 relative group"
                 >
                   <img
-                    src={image}
-                    alt={`Gallery image ${index + 1}`}
+                    src={image.url}
+                    alt={image.title}
                     className="w-full h-full object-cover"
                   />
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-300 flex items-end">
+                    <div className="p-4 text-white transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                      <h4 className="font-semibold text-sm">{image.title}</h4>
+                      <p className="text-xs opacity-90">{image.description}</p>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
+        </div>
+        
+        <div className="text-center mt-8">
+          <Link
+            to="/gallery"
+            className="inline-flex items-center px-6 py-3 bg-yellow-500 text-blue-950 rounded-lg hover:bg-yellow-400 transition-colors font-medium"
+          >
+            <Camera className="mr-2" size={16} />
+            View Full Gallery
+          </Link>
         </div>
       </div>
     </section>

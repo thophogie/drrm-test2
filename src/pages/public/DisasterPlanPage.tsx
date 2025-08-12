@@ -1,8 +1,21 @@
 import React, { useState } from 'react';
-import { Shield, Calendar, AlertTriangle, Home, CheckCircle, Mountain, Zap, Cloud, Flame, Globe, Thermometer, Waves } from 'lucide-react';
+import { Shield, Calendar, AlertTriangle, Home, CheckCircle, Mountain, Zap, Cloud, Flame, Globe, Thermometer, Waves, Users, Building, Download, FileText } from 'lucide-react';
+import { usePages } from '../../contexts/PagesContext';
+import { Link } from 'react-router-dom';
 
 const DisasterPlanPage: React.FC = () => {
   const [activeAccordion, setActiveAccordion] = useState<string | null>('mitigation');
+  const { resources } = usePages();
+  
+  // Filter planning-related resources
+  const planningResources = resources.filter(resource => 
+    resource.status === 'published' && 
+    (resource.category === 'plan' || resource.tags.some(tag => 
+      tag.toLowerCase().includes('plan') || 
+      tag.toLowerCase().includes('drrm') ||
+      tag.toLowerCase().includes('strategy')
+    ))
+  );
 
   const planComponents = [
     {
@@ -89,9 +102,42 @@ const DisasterPlanPage: React.FC = () => {
     { icon: Shield, title: 'Community Engagement', description: 'Active participation from all community members to enhance resilience and ensure inclusive preparedness.', color: 'text-yellow-600' }
   ];
 
+  const planningSteps = [
+    {
+      step: 1,
+      title: 'Risk Assessment',
+      description: 'Identify and analyze potential hazards and vulnerabilities in the community',
+      icon: Search,
+      color: 'bg-red-500'
+    },
+    {
+      step: 2,
+      title: 'Plan Development',
+      description: 'Create comprehensive strategies and response protocols',
+      icon: FileText,
+      color: 'bg-blue-500'
+    },
+    {
+      step: 3,
+      title: 'Implementation',
+      description: 'Execute plans through training, drills, and community engagement',
+      icon: Users,
+      color: 'bg-green-500'
+    },
+    {
+      step: 4,
+      title: 'Monitoring & Evaluation',
+      description: 'Continuously assess and improve planning effectiveness',
+      icon: BarChart3,
+      color: 'bg-purple-500'
+    }
+  ];
+
   return (
-    <div className="min-h-screen bg-blue-950">
-      <div className="container mx-auto px-6 py-12">
+    <div className="min-h-screen bg-gray-50 pt-20">
+      {/* Header */}
+      <section className="bg-blue-950 text-white py-20">
+        <div className="container mx-auto px-6">
         {/* Header Section */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-yellow-500 rounded-full mb-6">
@@ -100,11 +146,15 @@ const DisasterPlanPage: React.FC = () => {
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
             Disaster Risk Reduction & Management Planning
           </h1>
+            <div className="w-24 h-1 bg-yellow-500 mx-auto mb-6"></div>
           <p className="text-xl text-blue-200 max-w-3xl mx-auto">
             Comprehensive strategies for preparing, responding to, and recovering from disasters to build resilient communities
           </p>
         </div>
+        </div>
+      </section>
 
+      <div className="container mx-auto px-6 py-16">
         {/* Introduction Section */}
         <div className="bg-white rounded-xl shadow-xl p-8 mb-12">
           <div className="flex flex-col md:flex-row items-center gap-8">
@@ -136,9 +186,45 @@ const DisasterPlanPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Planning Process Steps */}
+        <section className="mb-16">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-800 mb-4">DRRM Planning Process</h2>
+            <div className="w-24 h-1 bg-blue-500 mx-auto mb-6"></div>
+            <p className="text-gray-600 max-w-3xl mx-auto">
+              Our systematic approach to developing effective disaster risk reduction and management plans
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {planningSteps.map((step, index) => (
+              <div key={index} className="relative">
+                <div className="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transition-shadow">
+                  <div className={`w-16 h-16 ${step.color} rounded-full flex items-center justify-center mx-auto mb-4`}>
+                    <span className="text-white font-bold text-xl">{step.step}</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-3">{step.title}</h3>
+                  <p className="text-gray-600">{step.description}</p>
+                </div>
+                {index < planningSteps.length - 1 && (
+                  <div className="hidden lg:block absolute top-1/2 -right-4 transform -translate-y-1/2">
+                    <ArrowRight className="text-gray-400" size={24} />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+
         {/* DRRM Plans Section */}
         <div className="mb-12">
-          <h2 className="text-3xl font-bold text-white mb-8 text-center">Core DRRM Planning Components</h2>
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-800 mb-4">Core DRRM Planning Components</h2>
+            <div className="w-24 h-1 bg-red-500 mx-auto mb-6"></div>
+            <p className="text-gray-600 max-w-3xl mx-auto">
+              Essential components that form the foundation of effective disaster management
+            </p>
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {planComponents.map((plan, index) => (
@@ -161,9 +247,73 @@ const DisasterPlanPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Available Resources */}
+        {planningResources.length > 0 && (
+          <section className="mb-16">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-gray-800 mb-4">Planning Resources</h2>
+              <div className="w-24 h-1 bg-green-500 mx-auto mb-6"></div>
+              <p className="text-gray-600 max-w-3xl mx-auto">
+                Download official planning documents and templates
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {planningResources.slice(0, 6).map((resource) => (
+                <div key={resource.id} className="bg-white rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow">
+                  <div className="flex items-center mb-4">
+                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                      <FileText className="text-blue-600" size={24} />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-gray-800">{resource.title}</h3>
+                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                        {resource.category}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <p className="text-gray-600 text-sm mb-4">{resource.description}</p>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2 text-sm text-gray-500">
+                      <Download size={14} />
+                      <span>{resource.download_count} downloads</span>
+                    </div>
+                    
+                    <button
+                      onClick={() => window.open(resource.file_url, '_blank')}
+                      className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                    >
+                      <Download className="mr-2" size={16} />
+                      Download
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="text-center mt-8">
+              <Link
+                to="/resources"
+                className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <FolderOpen className="mr-2" size={16} />
+                View All Resources
+              </Link>
+            </div>
+          </section>
+        )}
+
         {/* Additional Plans Accordion */}
         <div className="mb-12">
-          <h2 className="text-3xl font-bold text-white mb-8 text-center">Additional Strategic Plans</h2>
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-800 mb-4">Additional Strategic Plans</h2>
+            <div className="w-24 h-1 bg-purple-500 mx-auto mb-6"></div>
+            <p className="text-gray-600 max-w-3xl mx-auto">
+              Specialized planning components for comprehensive disaster management
+            </p>
+          </div>
           
           <div className="max-w-4xl mx-auto space-y-4">
             {additionalPlans.map((plan) => (
@@ -178,12 +328,15 @@ const DisasterPlanPage: React.FC = () => {
                     <plan.icon className={`${plan.color} text-xl mr-4`} size={24} />
                     <h3 className="text-xl font-bold text-gray-800">{plan.title}</h3>
                   </div>
-                  <AlertTriangle 
+                  <div 
                     className={`text-gray-600 transition-transform duration-300 ${
                       activeAccordion === plan.id ? 'rotate-180' : ''
                     }`} 
-                    size={20} 
-                  />
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="6,9 12,15 18,9"></polyline>
+                    </svg>
+                  </div>
                 </div>
                 {activeAccordion === plan.id && (
                   <div className="p-6 bg-white">
@@ -203,8 +356,11 @@ const DisasterPlanPage: React.FC = () => {
         </div>
 
         {/* Implementation Framework */}
-        <div className="bg-white rounded-xl shadow-xl p-8 mb-12">
+        <section className="bg-white rounded-xl shadow-xl p-8 mb-12">
           <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">Implementation Framework</h2>
+          <p className="text-center text-gray-600 mb-8 max-w-2xl mx-auto">
+            Key elements for successful implementation of disaster risk reduction and management plans
+          </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {implementationSteps.map((step, index) => (
               <div key={index} className="text-center">
@@ -216,27 +372,33 @@ const DisasterPlanPage: React.FC = () => {
               </div>
             ))}
           </div>
-        </div>
+        </section>
 
         {/* Call to Action */}
-        <div className="text-center">
+        <section className="text-center">
           <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl p-8 shadow-xl">
             <h2 className="text-2xl font-bold text-white mb-4">Ready to Develop Your DRRM Plan?</h2>
             <p className="text-yellow-100 mb-6 max-w-2xl mx-auto">
               Start building comprehensive disaster resilience for your community with our expert guidance and resources.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="bg-white text-yellow-600 font-bold py-3 px-8 rounded-lg hover:bg-gray-100 transition duration-300 flex items-center justify-center">
+              <Link 
+                to="/resources"
+                className="bg-white text-yellow-600 font-bold py-3 px-8 rounded-lg hover:bg-gray-100 transition duration-300 flex items-center justify-center"
+              >
                 <Shield className="mr-2" size={20} />
                 Download Planning Guide
-              </button>
-              <button className="bg-blue-900 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-800 transition duration-300 flex items-center justify-center">
+              </Link>
+              <Link 
+                to="/contact"
+                className="bg-blue-900 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-800 transition duration-300 flex items-center justify-center"
+              >
                 <AlertTriangle className="mr-2" size={20} />
                 Contact Experts
-              </button>
+              </Link>
             </div>
           </div>
-        </div>
+        </section>
       </div>
     </div>
   );

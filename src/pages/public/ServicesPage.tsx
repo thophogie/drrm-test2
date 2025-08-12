@@ -1,7 +1,12 @@
 import React from 'react';
-import { Shield, Heart, Truck, Home, CheckCircle, Users, Phone, Clock, MapPin, AlertTriangle } from 'lucide-react';
+import { Shield, Heart, Truck, Home, CheckCircle, Users, Phone, Clock, MapPin, AlertTriangle, Building } from 'lucide-react';
+import { useData } from '../../contexts/DataContext';
+import { Link } from 'react-router-dom';
 
 const ServicesPage: React.FC = () => {
+  const { services } = useData();
+  const activeServices = services.filter(service => service.status === 'active');
+
   const mainServices = [
     {
       icon: Shield,
@@ -111,6 +116,13 @@ const ServicesPage: React.FC = () => {
     { title: 'Response & Recovery', description: 'Effective emergency response and rehabilitation', color: 'text-blue-500', bgColor: 'bg-blue-100' }
   ];
 
+  const emergencyContacts = [
+    { name: 'MDRRMO Emergency Hotline', number: '911', description: 'Primary emergency response' },
+    { name: 'Municipal Hall', number: '(052) 123-4567', description: 'General inquiries' },
+    { name: 'Fire Department', number: '(052) 567-8901', description: 'Fire emergencies' },
+    { name: 'Police Station', number: '117', description: 'Security and law enforcement' }
+  ];
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -124,6 +136,54 @@ const ServicesPage: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* Dynamic Services from Admin */}
+      {activeServices.length > 0 && (
+        <section className="py-16 bg-white">
+          <div className="container mx-auto px-6">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-gray-800 mb-4">Our Current Services</h2>
+              <div className="w-24 h-1 bg-blue-500 mx-auto mb-6"></div>
+              <p className="text-gray-600 max-w-3xl mx-auto">
+                Services currently offered by MDRRMO Pio Duran
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-8">
+              {activeServices.map((service) => (
+                <div
+                  key={service.id}
+                  className="bg-white p-8 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border-l-4 border-blue-600"
+                >
+                  <div className="flex items-start space-x-4">
+                    <div className="bg-blue-100 p-4 rounded-full">
+                      <Shield className="text-blue-600" size={24} />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold mb-3 text-blue-900">
+                        {service.title}
+                      </h3>
+                      <p className="text-gray-700 mb-4">
+                        {service.description}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {service.tags.map((tag, tagIndex) => (
+                          <span
+                            key={tagIndex}
+                            className="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Services Grid */}
       <section className="py-16">
@@ -223,6 +283,37 @@ const ServicesPage: React.FC = () => {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Emergency Contacts Section */}
+      <section className="py-16 bg-blue-950 text-white">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">Emergency Contacts</h2>
+            <div className="w-24 h-1 bg-yellow-500 mx-auto mb-6"></div>
+            <p className="text-blue-200 max-w-3xl mx-auto">
+              Important contact numbers for emergency situations
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {emergencyContacts.map((contact, index) => (
+              <div key={index} className="bg-blue-800 rounded-lg p-6 text-center hover:bg-blue-700 transition-colors">
+                <div className="w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Phone className="text-blue-950" size={24} />
+                </div>
+                <h3 className="text-lg font-bold mb-2">{contact.name}</h3>
+                <a 
+                  href={`tel:${contact.number.replace(/[^\d]/g, '')}`}
+                  className="text-2xl font-bold text-yellow-500 hover:text-yellow-400 transition-colors block mb-2"
+                >
+                  {contact.number}
+                </a>
+                <p className="text-blue-200 text-sm">{contact.description}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
