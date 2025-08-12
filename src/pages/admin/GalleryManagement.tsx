@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
+import { useData } from '../../contexts/DataContext';
 import { Plus, Edit, Trash2, Eye, Search, Upload, X, Calendar, MapPin, Tag, Zap } from 'lucide-react';
-import BulkUploadModal from '../../components/BulkUploadModal';
-import ImageOptimizer from '../../components/ImageOptimizer';
 
-interface GalleryItem {
-  id: string;
+interface GalleryFormData {
   title: string;
   description: string;
   image: string;
@@ -14,91 +12,36 @@ interface GalleryItem {
   tags: string[];
   status: 'published' | 'draft';
   featured: boolean;
-  createdAt: string;
-  optimized?: boolean;
-  originalSize?: number;
-  optimizedSize?: number;
 }
 
 const GalleryManagement: React.FC = () => {
-  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([
-    {
-      id: '1',
-      title: 'BDRRM Planning Training Workshop',
-      description: 'Training session on Barangay Disaster Risk Reduction and Management Planning at Barangay Basicao Interior.',
-      image: 'https://res.cloudinary.com/dedcmctqk/image/upload/v1750575265/487673077_1062718335885316_7552782387266701410_n_gexfn2.jpg',
-      category: 'Training',
-      date: '2024-06-25',
-      location: 'Barangay Basicao Interior',
-      tags: ['BDRRM', 'Training', 'Workshop', 'Barangay Officials'],
-      status: 'published',
-      featured: true,
-      createdAt: '2024-06-29',
-      optimized: true,
-      originalSize: 2048000,
-      optimizedSize: 512000
-    },
-    {
-      id: '2',
-      title: 'Nationwide Simultaneous Earthquake Drill',
-      description: 'Municipality participated in the 2nd quarter nationwide simultaneous earthquake drill with over 5,000 participants.',
-      image: 'https://res.cloudinary.com/dedcmctqk/image/upload/v1750575261/489043126_1065374988952984_1331524645056736117_n_fbmvch.jpg',
-      category: 'Drill',
-      date: '2023-06-09',
-      location: 'Municipality-wide',
-      tags: ['Earthquake', 'Drill', 'Safety', 'Community'],
-      status: 'published',
-      featured: false,
-      createdAt: '2023-06-09',
-      optimized: false
-    },
-    {
-      id: '3',
-      title: 'Water Rescue Training Course',
-      description: '20 volunteers completed intensive training in Basic Life Support, survival skills, and Water Search and Rescue (WASAR).',
-      image: 'https://res.cloudinary.com/dedcmctqk/image/upload/v1750575263/472984055_1002760098547807_5747993743270536498_n_cgi07u.jpg',
-      category: 'Training',
-      date: '2021-11-19',
-      location: 'Training Center',
-      tags: ['Water Rescue', 'WASAR', 'Volunteers', 'Life Support'],
-      status: 'published',
-      featured: false,
-      createdAt: '2023-05-24',
-      optimized: true,
-      originalSize: 1536000,
-      optimizedSize: 384000
-    }
-  ]);
-
+  const { gallery, addGalleryItem, updateGalleryItem, deleteGalleryItem } = useData();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
-  const [isOptimizerOpen, setIsOptimizerOpen] = useState(false);
-  const [selectedImageForOptimization, setSelectedImageForOptimization] = useState<string | null>(null);
   const [editingItem, setEditingItem] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<GalleryFormData>({
     title: '',
     description: '',
     image: '',
     category: '',
     date: '',
     location: '',
-    tags: [] as string[],
-    status: 'draft' as 'published' | 'draft',
+    tags: [],
+    status: 'draft',
     featured: false
   });
   const [tagInput, setTagInput] = useState('');
 
   const categories = ['Training', 'Drill', 'Response', 'Community Event', 'Meeting', 'Workshop', 'Assessment'];
 
-  const filteredItems = galleryItems.filter(item => {
+  const filteredItems = gallery.filter(item => {
     const matchesSearch = 
       item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+      (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (item.location && item.location.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (item.tags && item.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())));
     
     const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
     const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
@@ -106,28 +49,20 @@ const GalleryManagement: React.FC = () => {
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const now = new Date().toISOString().split('T')[0];
-    
-    if (editingItem) {
-      setGalleryItems(prev => prev.map(item => 
-        item.id === editingItem 
-          ? { ...item, ...formData, createdAt: item.createdAt }
-          : item
-      ));
-    } else {
-      const newItem: GalleryItem = {
-        id: Date.now().toString(),
-        ...formData,
-        createdAt: now,
-        optimized: false
-      };
-      setGalleryItems(prev => [newItem, ...prev]);
+    try {
+      if (editingItem) {
+        await updateGalleryItem(editingItem, formData);
+      } else {
+        await addGalleryItem(formData);
+      }
+      resetForm();
+    } catch (error) {
+      console.error('Error saving gallery item:', error);
+      alert('Error saving gallery item. Please try again.');
     }
-
-    resetForm();
   };
 
   const resetForm = () => {
@@ -147,15 +82,15 @@ const GalleryManagement: React.FC = () => {
     setIsModalOpen(false);
   };
 
-  const handleEdit = (item: GalleryItem) => {
+  const handleEdit = (item: any) => {
     setFormData({
       title: item.title,
-      description: item.description,
-      image: item.image,
-      category: item.category,
-      date: item.date,
-      location: item.location,
-      tags: item.tags,
+      description: item.description || '',
+      image: item.image || '',
+      category: item.category || '',
+      date: item.date || '',
+      location: item.location || '',
+      tags: item.tags || [],
       status: item.status,
       featured: item.featured
     });
@@ -163,18 +98,26 @@ const GalleryManagement: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this gallery item?')) {
-      setGalleryItems(prev => prev.filter(item => item.id !== id));
+      try {
+        await deleteGalleryItem(id);
+      } catch (error) {
+        console.error('Error deleting gallery item:', error);
+        alert('Error deleting gallery item. Please try again.');
+      }
     }
   };
 
-  const toggleFeatured = (id: string) => {
-    setGalleryItems(prev => prev.map(item => 
-      item.id === id 
-        ? { ...item, featured: !item.featured }
-        : item
-    ));
+  const toggleFeatured = async (id: string) => {
+    const item = gallery.find(i => i.id === id);
+    if (item) {
+      try {
+        await updateGalleryItem(id, { featured: !item.featured });
+      } catch (error) {
+        console.error('Error updating featured status:', error);
+      }
+    }
   };
 
   const addTag = () => {
@@ -194,52 +137,6 @@ const GalleryManagement: React.FC = () => {
     });
   };
 
-  const handleBulkUpload = (items: any[]) => {
-    const newItems: GalleryItem[] = items.map(item => ({
-      id: Date.now().toString() + Math.random(),
-      title: item.title,
-      description: item.description,
-      image: item.preview, // In real app, this would be uploaded to server
-      category: item.category,
-      date: item.date,
-      location: item.location,
-      tags: item.tags,
-      status: 'draft',
-      featured: false,
-      createdAt: new Date().toISOString().split('T')[0],
-      optimized: item.status === 'optimized',
-      originalSize: item.originalSize,
-      optimizedSize: item.optimizedSize
-    }));
-
-    setGalleryItems(prev => [...newItems, ...prev]);
-  };
-
-  const handleOptimizeImage = (id: string) => {
-    const item = galleryItems.find(i => i.id === id);
-    if (item) {
-      setSelectedImageForOptimization(item.image);
-      setIsOptimizerOpen(true);
-    }
-  };
-
-  const handleOptimizationComplete = (optimizedUrl: string, stats: any) => {
-    if (selectedImageForOptimization) {
-      // In real app, you would upload the optimized image to server
-      // For demo, we'll just update the optimization status
-      setGalleryItems(prev => prev.map(item => 
-        item.image === selectedImageForOptimization
-          ? { 
-              ...item, 
-              optimized: true,
-              originalSize: stats.originalSize,
-              optimizedSize: stats.optimizedSize
-            }
-          : item
-      ));
-    }
-  };
-
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -248,43 +145,32 @@ const GalleryManagement: React.FC = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const totalOriginalSize = galleryItems.reduce((sum, item) => sum + (item.originalSize || 0), 0);
-  const totalOptimizedSize = galleryItems.reduce((sum, item) => sum + (item.optimizedSize || item.originalSize || 0), 0);
-  const totalSavings = totalOriginalSize > 0 ? ((totalOriginalSize - totalOptimizedSize) / totalOriginalSize) * 100 : 0;
-
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Gallery Management</h1>
-          <p className="text-gray-600">Manage photos, events, and activities gallery with bulk upload and optimization</p>
+          <p className="text-gray-600">Manage photos, events, and activities gallery</p>
         </div>
         <div className="flex space-x-3">
-          <button
-            onClick={() => setIsBulkUploadOpen(true)}
-            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
-          >
-            <Upload size={20} />
-            <span>Bulk Upload</span>
-          </button>
           <button
             onClick={() => setIsModalOpen(true)}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
           >
             <Plus size={20} />
-            <span>Add Single Item</span>
+            <span>Add Gallery Item</span>
           </button>
         </div>
       </div>
 
-      {/* Enhanced Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Items</p>
-              <p className="text-3xl font-bold text-gray-900">{galleryItems.length}</p>
+              <p className="text-3xl font-bold text-gray-900">{gallery.length}</p>
             </div>
             <div className="bg-blue-100 p-3 rounded-lg">
               <Eye className="h-6 w-6 text-blue-600" />
@@ -297,7 +183,7 @@ const GalleryManagement: React.FC = () => {
             <div>
               <p className="text-sm font-medium text-gray-600">Published</p>
               <p className="text-3xl font-bold text-green-600">
-                {galleryItems.filter(item => item.status === 'published').length}
+                {gallery.filter(item => item.status === 'published').length}
               </p>
             </div>
             <div className="bg-green-100 p-3 rounded-lg">
@@ -309,39 +195,25 @@ const GalleryManagement: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Optimized</p>
-              <p className="text-3xl font-bold text-purple-600">
-                {galleryItems.filter(item => item.optimized).length}
+              <p className="text-sm font-medium text-gray-600">Featured</p>
+              <p className="text-3xl font-bold text-yellow-600">
+                {gallery.filter(item => item.featured).length}
               </p>
+            </div>
+            <div className="bg-yellow-100 p-3 rounded-lg">
+              <Tag className="h-6 w-6 text-yellow-600" />
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Categories</p>
+              <p className="text-3xl font-bold text-purple-600">{categories.length}</p>
             </div>
             <div className="bg-purple-100 p-3 rounded-lg">
-              <Zap className="h-6 w-6 text-purple-600" />
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Storage Saved</p>
-              <p className="text-2xl font-bold text-orange-600">
-                {formatFileSize(totalOriginalSize - totalOptimizedSize)}
-              </p>
-            </div>
-            <div className="bg-orange-100 p-3 rounded-lg">
-              <Tag className="h-6 w-6 text-orange-600" />
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Compression</p>
-              <p className="text-3xl font-bold text-green-600">{totalSavings.toFixed(1)}%</p>
-            </div>
-            <div className="bg-green-100 p-3 rounded-lg">
-              <Zap className="h-6 w-6 text-green-600" />
+              <Tag className="h-6 w-6 text-purple-600" />
             </div>
           </div>
         </div>
@@ -394,17 +266,15 @@ const GalleryManagement: React.FC = () => {
           <div key={item.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             <div className="relative">
               <img
-                src={item.image}
+                src={item.image || 'https://images.pexels.com/photos/6146970/pexels-photo-6146970.jpeg'}
                 alt={item.title}
                 className="w-full h-48 object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = 'https://images.pexels.com/photos/6146970/pexels-photo-6146970.jpeg';
+                }}
               />
               <div className="absolute top-2 right-2 flex space-x-2">
-                {item.optimized && (
-                  <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full flex items-center">
-                    <Zap size={10} className="mr-1" />
-                    Optimized
-                  </span>
-                )}
                 {item.featured && (
                   <span className="bg-yellow-500 text-white text-xs px-2 py-1 rounded-full">
                     Featured
@@ -418,15 +288,6 @@ const GalleryManagement: React.FC = () => {
                   {item.status}
                 </span>
               </div>
-              <div className="absolute top-2 left-2">
-                <button
-                  onClick={() => handleOptimizeImage(item.id)}
-                  className="bg-purple-600 text-white p-1 rounded-full hover:bg-purple-700 transition-colors"
-                  title="Optimize Image"
-                >
-                  <Zap size={12} />
-                </button>
-              </div>
             </div>
             
             <div className="p-4">
@@ -439,26 +300,20 @@ const GalleryManagement: React.FC = () => {
               <div className="space-y-2 mb-4">
                 <div className="flex items-center text-xs text-gray-500">
                   <Calendar size={12} className="mr-1" />
-                  {new Date(item.date).toLocaleDateString()}
+                  {item.date ? new Date(item.date).toLocaleDateString() : 'No date'}
                 </div>
                 <div className="flex items-center text-xs text-gray-500">
                   <MapPin size={12} className="mr-1" />
-                  {item.location}
+                  {item.location || 'No location'}
                 </div>
                 <div className="flex items-center text-xs text-gray-500">
                   <Tag size={12} className="mr-1" />
-                  {item.category}
+                  {item.category || 'No category'}
                 </div>
-                {item.optimized && item.originalSize && item.optimizedSize && (
-                  <div className="text-xs text-green-600">
-                    Saved: {formatFileSize(item.originalSize - item.optimizedSize)} 
-                    ({(((item.originalSize - item.optimizedSize) / item.originalSize) * 100).toFixed(1)}%)
-                  </div>
-                )}
               </div>
               
               <div className="flex flex-wrap gap-1 mb-4">
-                {item.tags.slice(0, 3).map((tag, index) => (
+                {(item.tags || []).slice(0, 3).map((tag, index) => (
                   <span
                     key={index}
                     className="bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded-full"
@@ -466,8 +321,8 @@ const GalleryManagement: React.FC = () => {
                     {tag}
                   </span>
                 ))}
-                {item.tags.length > 3 && (
-                  <span className="text-xs text-gray-500">+{item.tags.length - 3} more</span>
+                {(item.tags || []).length > 3 && (
+                  <span className="text-xs text-gray-500">+{(item.tags || []).length - 3} more</span>
                 )}
               </div>
               
@@ -505,7 +360,7 @@ const GalleryManagement: React.FC = () => {
         ))}
       </div>
 
-      {/* Single Item Modal */}
+      {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -693,43 +548,6 @@ const GalleryManagement: React.FC = () => {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* Bulk Upload Modal */}
-      <BulkUploadModal
-        isOpen={isBulkUploadOpen}
-        onClose={() => setIsBulkUploadOpen(false)}
-        onSubmit={handleBulkUpload}
-        categories={categories}
-      />
-
-      {/* Image Optimizer Modal */}
-      {isOptimizerOpen && selectedImageForOptimization && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-semibold text-gray-900">Image Optimizer</h2>
-                <button
-                  onClick={() => {
-                    setIsOptimizerOpen(false);
-                    setSelectedImageForOptimization(null);
-                  }}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X size={24} />
-                </button>
-              </div>
-            </div>
-            
-            <div className="p-6">
-              <ImageOptimizer
-                imageUrl={selectedImageForOptimization}
-                onOptimized={handleOptimizationComplete}
-              />
-            </div>
           </div>
         </div>
       )}

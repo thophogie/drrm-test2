@@ -11,36 +11,44 @@ import {
   TrendingUp,
   MessageCircle,
   Heart,
-  Share2
+  Share2,
+  Facebook,
+  Twitter,
+  Instagram,
+  Youtube
 } from 'lucide-react';
-import SocialMediaManager from '../../components/SocialMediaManager';
 
-interface ScheduledPost {
+interface SocialPost {
   id: string;
+  platform: 'facebook' | 'twitter' | 'instagram' | 'youtube';
   content: string;
-  platforms: string[];
-  scheduledTime: string;
-  status: 'scheduled' | 'published' | 'failed';
   image?: string;
+  scheduledTime?: string;
+  status: 'draft' | 'scheduled' | 'published';
+  engagement: {
+    likes: number;
+    shares: number;
+    comments: number;
+  };
 }
 
 const SocialMediaManagement: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'posts' | 'schedule' | 'analytics'>('overview');
-  const [scheduledPosts, setScheduledPosts] = useState<ScheduledPost[]>([
+  const [scheduledPosts, setScheduledPosts] = useState<SocialPost[]>([
     {
       id: '1',
-      content: 'Join us for the upcoming Emergency Response Training this Saturday! 🚨 Learn essential skills to help your community during disasters.',
-      platforms: ['facebook', 'twitter'],
-      scheduledTime: '2025-01-25T10:00:00Z',
-      status: 'scheduled',
-      image: 'https://images.pexels.com/photos/6146970/pexels-photo-6146970.jpeg'
+      platform: 'facebook',
+      content: 'BDRRM Planning Training Workshop completed successfully! 🎯 Thank you to all barangay officials who participated.',
+      image: 'https://res.cloudinary.com/dedcmctqk/image/upload/v1750575265/487673077_1062718335885316_7552782387266701410_n_gexfn2.jpg',
+      status: 'published',
+      engagement: { likes: 45, shares: 12, comments: 8 }
     },
     {
       id: '2',
-      content: 'Weather Alert: Monitoring incoming weather system. Stay updated and follow safety protocols. #WeatherAlert #StaySafe',
-      platforms: ['twitter', 'facebook'],
-      scheduledTime: '2025-01-24T08:00:00Z',
-      status: 'published'
+      platform: 'twitter',
+      content: 'Nationwide Earthquake Drill: Over 5,000 participants joined our community preparedness exercise! 🏢 #DisasterPreparedness #PioDuran',
+      status: 'published',
+      engagement: { likes: 23, shares: 18, comments: 5 }
     }
   ]);
 
@@ -52,17 +60,10 @@ const SocialMediaManagement: React.FC = () => {
   };
 
   const platformStats = [
-    { platform: 'Facebook', followers: 2500, engagement: 4.8, posts: 8, color: 'bg-blue-600' },
-    { platform: 'Twitter', followers: 1800, engagement: 3.2, posts: 12, color: 'bg-sky-500' },
-    { platform: 'Instagram', followers: 3200, engagement: 5.1, posts: 6, color: 'bg-pink-600' },
-    { platform: 'YouTube', followers: 842, engagement: 6.3, posts: 2, color: 'bg-red-600' }
-  ];
-
-  const recentActivity = [
-    { type: 'like', platform: 'Facebook', content: 'BDRRM Training Workshop post', time: '2 hours ago' },
-    { type: 'comment', platform: 'Instagram', content: 'Water rescue training photo', time: '4 hours ago' },
-    { type: 'share', platform: 'Twitter', content: 'Weather alert update', time: '6 hours ago' },
-    { type: 'follow', platform: 'Facebook', content: 'New follower: Maria Santos', time: '8 hours ago' }
+    { platform: 'Facebook', followers: 2500, engagement: 4.8, posts: 8, color: 'bg-blue-600', icon: Facebook },
+    { platform: 'Twitter', followers: 1800, engagement: 3.2, posts: 12, color: 'bg-sky-500', icon: Twitter },
+    { platform: 'Instagram', followers: 3200, engagement: 5.1, posts: 6, color: 'bg-pink-600', icon: Instagram },
+    { platform: 'YouTube', followers: 842, engagement: 6.3, posts: 2, color: 'bg-red-600', icon: Youtube }
   ];
 
   const handleDeletePost = (id: string) => {
@@ -132,10 +133,6 @@ const SocialMediaManagement: React.FC = () => {
                   <Users className="h-6 w-6 text-blue-600" />
                 </div>
               </div>
-              <div className="mt-4 flex items-center">
-                <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-                <span className="text-sm text-green-600">+12% from last month</span>
-              </div>
             </div>
 
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
@@ -147,10 +144,6 @@ const SocialMediaManagement: React.FC = () => {
                 <div className="bg-green-100 p-3 rounded-lg">
                   <Eye className="h-6 w-6 text-green-600" />
                 </div>
-              </div>
-              <div className="mt-4 flex items-center">
-                <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-                <span className="text-sm text-green-600">+8% from last month</span>
               </div>
             </div>
 
@@ -164,10 +157,6 @@ const SocialMediaManagement: React.FC = () => {
                   <Heart className="h-6 w-6 text-purple-600" />
                 </div>
               </div>
-              <div className="mt-4 flex items-center">
-                <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-                <span className="text-sm text-green-600">+0.3% from last month</span>
-              </div>
             </div>
 
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
@@ -180,117 +169,101 @@ const SocialMediaManagement: React.FC = () => {
                   <Send className="h-6 w-6 text-orange-600" />
                 </div>
               </div>
-              <div className="mt-4 flex items-center">
-                <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-                <span className="text-sm text-green-600">+4 from last month</span>
-              </div>
             </div>
           </div>
 
           {/* Platform Performance */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Platform Performance</h3>
-              <div className="space-y-4">
-                {platformStats.map((platform) => (
-                  <div key={platform.platform} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-3 h-3 rounded-full ${platform.color}`}></div>
-                      <span className="font-medium text-gray-900">{platform.platform}</span>
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Platform Performance</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {platformStats.map((platform) => (
+                <div key={platform.platform} className="p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className={`${platform.color} p-2 rounded-lg`}>
+                      <platform.icon size={16} className="text-white" />
                     </div>
-                    <div className="text-right">
-                      <div className="text-sm font-medium text-gray-900">{formatNumber(platform.followers)} followers</div>
-                      <div className="text-xs text-gray-500">{platform.engagement}% engagement</div>
+                    <span className="font-medium text-gray-900">{platform.platform}</span>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Followers</span>
+                      <span className="font-medium">{formatNumber(platform.followers)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Engagement</span>
+                      <span className="font-medium text-green-600">{platform.engagement}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Posts</span>
+                      <span className="font-medium">{platform.posts}</span>
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
-              <div className="space-y-3">
-                {recentActivity.map((activity, index) => (
-                  <div key={index} className="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg">
-                    <div className="flex-shrink-0">
-                      {activity.type === 'like' && <Heart size={16} className="text-red-500 mt-1" />}
-                      {activity.type === 'comment' && <MessageCircle size={16} className="text-blue-500 mt-1" />}
-                      {activity.type === 'share' && <Share2 size={16} className="text-green-500 mt-1" />}
-                      {activity.type === 'follow' && <Users size={16} className="text-purple-500 mt-1" />}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm text-gray-900">{activity.content}</p>
-                      <p className="text-xs text-gray-500">{activity.platform} • {activity.time}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       )}
 
       {activeTab === 'posts' && (
-        <div>
-          <SocialMediaManager />
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Posts</h3>
+          <div className="space-y-4">
+            {scheduledPosts.map((post) => {
+              const platformConfig = platformStats.find(p => p.platform.toLowerCase() === post.platform);
+              return (
+                <div key={post.id} className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-start space-x-3">
+                    <div className={`${platformConfig?.color} p-2 rounded-lg`}>
+                      {platformConfig && <platformConfig.icon size={16} className="text-white" />}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium text-gray-900">{platformConfig?.platform}</span>
+                        <span className={`px-2 py-1 text-xs rounded-full ${
+                          post.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {post.status}
+                        </span>
+                      </div>
+                      <p className="text-gray-700 mb-3">{post.content}</p>
+                      {post.image && (
+                        <img 
+                          src={post.image} 
+                          alt="Post"
+                          className="w-full h-32 object-cover rounded-lg mb-3"
+                        />
+                      )}
+                      <div className="flex items-center space-x-4 text-sm text-gray-500">
+                        <div className="flex items-center space-x-1">
+                          <Heart size={14} />
+                          <span>{post.engagement.likes}</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <Share2 size={14} />
+                          <span>{post.engagement.shares}</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <MessageCircle size={14} />
+                          <span>{post.engagement.comments}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
       {activeTab === 'schedule' && (
-        <div className="space-y-6">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">Scheduled Posts</h3>
-            </div>
-            <div className="divide-y divide-gray-200">
-              {scheduledPosts.map((post) => (
-                <div key={post.id} className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <span className={`px-2 py-1 text-xs rounded-full ${
-                          post.status === 'scheduled' ? 'bg-yellow-100 text-yellow-800' :
-                          post.status === 'published' ? 'bg-green-100 text-green-800' :
-                          'bg-red-100 text-red-800'
-                        }`}>
-                          {post.status}
-                        </span>
-                        <span className="text-sm text-gray-500">
-                          {new Date(post.scheduledTime).toLocaleString()}
-                        </span>
-                      </div>
-                      <p className="text-gray-900 mb-3">{post.content}</p>
-                      {post.image && (
-                        <img 
-                          src={post.image} 
-                          alt="Post content"
-                          className="w-32 h-20 object-cover rounded-lg mb-3"
-                        />
-                      )}
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm text-gray-500">Platforms:</span>
-                        {post.platforms.map((platform) => (
-                          <span key={platform} className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                            {platform}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2 ml-4">
-                      <button className="text-blue-600 hover:text-blue-800">
-                        <Edit size={16} />
-                      </button>
-                      <button 
-                        onClick={() => handleDeletePost(post.id)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Scheduled Posts</h3>
+          <div className="text-center py-12">
+            <Calendar className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No Scheduled Posts</h3>
+            <p className="text-gray-500">Create a new post to schedule it for later.</p>
           </div>
         </div>
       )}

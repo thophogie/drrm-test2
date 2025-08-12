@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import MySQLDatabase from '../lib/mysql';
 
 type DatabaseType = 'supabase' | 'mysql';
 
@@ -17,7 +16,7 @@ interface DatabaseConfig {
 
 interface DatabaseContextType {
   databaseType: DatabaseType;
-  switchDatabase: (config: DatabaseConfig) => void;
+  switchDatabase: (config: DatabaseConfig) => Promise<void>;
   isConnected: boolean;
   connectionError: string | null;
 }
@@ -36,7 +35,6 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [databaseType, setDatabaseType] = useState<DatabaseType>('supabase');
   const [isConnected, setIsConnected] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
-  const [mysqlInstance, setMysqlInstance] = useState<MySQLDatabase | null>(null);
 
   useEffect(() => {
     // Test initial Supabase connection
@@ -51,26 +49,8 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setConnectionError(null);
     } catch (error) {
       setIsConnected(false);
-      setConnectionError('Failed to connect to Supabase');
+      setConnectionError('Failed to connect to Supabase. Please check your configuration.');
       console.error('Supabase connection error:', error);
-    }
-  };
-
-  const testMySQLConnection = async (config: DatabaseConfig['mysql']) => {
-    if (!config) throw new Error('MySQL config is required');
-    
-    try {
-      const mysql = new MySQLDatabase(config);
-      await mysql.query('SELECT 1');
-      setMysqlInstance(mysql);
-      setIsConnected(true);
-      setConnectionError(null);
-      return true;
-    } catch (error) {
-      setIsConnected(false);
-      setConnectionError('Failed to connect to MySQL');
-      console.error('MySQL connection error:', error);
-      return false;
     }
   };
 
@@ -79,18 +59,13 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setConnectionError(null);
 
     if (config.type === 'mysql') {
-      const success = await testMySQLConnection(config.mysql);
-      if (success) {
-        setDatabaseType('mysql');
-      }
+      // MySQL is not supported in browser environment
+      setConnectionError('MySQL is not supported in browser environment. Please use Supabase.');
+      return;
     } else {
       await testSupabaseConnection();
       if (isConnected) {
         setDatabaseType('supabase');
-        if (mysqlInstance) {
-          await mysqlInstance.close();
-          setMysqlInstance(null);
-        }
       }
     }
   };

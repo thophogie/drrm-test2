@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useData } from '../../contexts/DataContext';
-import { Search, Filter, Eye, Edit, Trash2, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Search, Filter, Eye, Trash2, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
 
 const IncidentReports: React.FC = () => {
   const { incidents, updateIncident, deleteIncident } = useData();
@@ -12,10 +12,10 @@ const IncidentReports: React.FC = () => {
 
   const filteredIncidents = incidents.filter(incident => {
     const matchesSearch = 
-      incident.reporterName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      incident.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      incident.incidentType.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      incident.referenceNumber.toLowerCase().includes(searchTerm.toLowerCase());
+      (incident.reporterName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (incident.location || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (incident.incidentType || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (incident.referenceNumber || '').toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === 'all' || incident.status === statusFilter;
     const matchesUrgency = urgencyFilter === 'all' || incident.urgency === urgencyFilter;
@@ -23,13 +23,23 @@ const IncidentReports: React.FC = () => {
     return matchesSearch && matchesStatus && matchesUrgency;
   });
 
-  const handleStatusChange = (id: string, newStatus: string) => {
-    updateIncident(id, { status: newStatus as 'pending' | 'in-progress' | 'resolved' });
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    try {
+      await updateIncident(id, { status: newStatus as 'pending' | 'in-progress' | 'resolved' });
+    } catch (error) {
+      console.error('Error updating incident status:', error);
+      alert('Error updating incident status. Please try again.');
+    }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this incident report?')) {
-      deleteIncident(id);
+      try {
+        await deleteIncident(id);
+      } catch (error) {
+        console.error('Error deleting incident:', error);
+        alert('Error deleting incident. Please try again.');
+      }
     }
   };
 
@@ -83,6 +93,63 @@ const IncidentReports: React.FC = () => {
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Incident Reports</h1>
         <p className="text-gray-600">Manage and track incident reports from the community</p>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Reports</p>
+              <p className="text-3xl font-bold text-gray-900">{incidents.length}</p>
+            </div>
+            <div className="bg-blue-100 p-3 rounded-lg">
+              <AlertTriangle className="h-6 w-6 text-blue-600" />
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Pending</p>
+              <p className="text-3xl font-bold text-yellow-600">
+                {incidents.filter(i => i.status === 'pending').length}
+              </p>
+            </div>
+            <div className="bg-yellow-100 p-3 rounded-lg">
+              <Clock className="h-6 w-6 text-yellow-600" />
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">In Progress</p>
+              <p className="text-3xl font-bold text-blue-600">
+                {incidents.filter(i => i.status === 'in-progress').length}
+              </p>
+            </div>
+            <div className="bg-blue-100 p-3 rounded-lg">
+              <AlertTriangle className="h-6 w-6 text-blue-600" />
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Resolved</p>
+              <p className="text-3xl font-bold text-green-600">
+                {incidents.filter(i => i.status === 'resolved').length}
+              </p>
+            </div>
+            <div className="bg-green-100 p-3 rounded-lg">
+              <CheckCircle className="h-6 w-6 text-green-600" />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Filters */}
@@ -163,16 +230,16 @@ const IncidentReports: React.FC = () => {
               {filteredIncidents.map((incident) => (
                 <tr key={incident.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                    {incident.referenceNumber}
+                    {incident.referenceNumber || 'N/A'}
                   </td>
                   <td className="px-6 py-4">
                     <div>
-                      <div className="text-sm font-medium text-gray-900">{incident.reporterName}</div>
-                      <div className="text-sm text-gray-500">{incident.contactNumber}</div>
+                      <div className="text-sm font-medium text-gray-900">{incident.reporterName || 'Unknown'}</div>
+                      <div className="text-sm text-gray-500">{incident.contactNumber || 'No contact'}</div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{incident.incidentType}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{incident.location}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">{incident.incidentType || 'Not specified'}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">{incident.location || 'Not specified'}</td>
                   <td className="px-6 py-4">
                     <span className={`px-2 py-1 text-xs rounded-full ${getUrgencyColor(incident.urgency)}`}>
                       {incident.urgency}
@@ -193,7 +260,7 @@ const IncidentReports: React.FC = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-900">
-                    {new Date(incident.dateReported).toLocaleDateString()}
+                    {incident.dateReported ? new Date(incident.dateReported).toLocaleDateString() : 'No date'}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center space-x-2">
@@ -242,12 +309,12 @@ const IncidentReports: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Reference Number</label>
-                  <p className="text-sm text-gray-900">{selectedIncident.referenceNumber}</p>
+                  <p className="text-sm text-gray-900">{selectedIncident.referenceNumber || 'N/A'}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Date Reported</label>
                   <p className="text-sm text-gray-900">
-                    {new Date(selectedIncident.dateReported).toLocaleString()}
+                    {selectedIncident.dateReported ? new Date(selectedIncident.dateReported).toLocaleString() : 'No date'}
                   </p>
                 </div>
               </div>
@@ -255,22 +322,22 @@ const IncidentReports: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Reporter Name</label>
-                  <p className="text-sm text-gray-900">{selectedIncident.reporterName}</p>
+                  <p className="text-sm text-gray-900">{selectedIncident.reporterName || 'Unknown'}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Contact Number</label>
-                  <p className="text-sm text-gray-900">{selectedIncident.contactNumber}</p>
+                  <p className="text-sm text-gray-900">{selectedIncident.contactNumber || 'No contact'}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Incident Type</label>
-                  <p className="text-sm text-gray-900">{selectedIncident.incidentType}</p>
+                  <p className="text-sm text-gray-900">{selectedIncident.incidentType || 'Not specified'}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Location</label>
-                  <p className="text-sm text-gray-900">{selectedIncident.location}</p>
+                  <p className="text-sm text-gray-900">{selectedIncident.location || 'Not specified'}</p>
                 </div>
               </div>
 
@@ -292,7 +359,7 @@ const IncidentReports: React.FC = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700">Description</label>
                 <p className="text-sm text-gray-900 mt-1 p-3 bg-gray-50 rounded-lg">
-                  {selectedIncident.description}
+                  {selectedIncident.description || 'No description provided'}
                 </p>
               </div>
             </div>
